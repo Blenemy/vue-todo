@@ -1,4 +1,5 @@
 <script>
+import { TransitionGroup } from "vue";
 import StatusFilter from "./components/StatusFilter.vue";
 import TodoItem from "./components/TodoItem.vue";
 import { todos } from "./utils/data.js";
@@ -21,6 +22,17 @@ export default {
     },
     completedTodos() {
       return this.todos.filter((todo) => todo.completed);
+    },
+    visibleTodos() {
+      switch (this.status) {
+        case "active":
+          return this.activeTodos;
+        case "completed":
+          return this.completedTodos;
+
+        default:
+          return this.todos;
+      }
     },
   },
   methods: {
@@ -69,15 +81,15 @@ export default {
         </form>
       </header>
 
-      <section class="todoapp__main">
+      <TransitionGroup class="todoapp__main" name="list" tag="section">
         <TodoItem
-          v-for="(todo, index) of todos"
+          v-for="todo of visibleTodos"
           :key="todo.id"
           :todo="todo"
-          @updateTodo="todos[index] = $event"
-          @deleteTodo="todos.splice(index, 1)"
+          @updateTodo="Object.assign(todo, $event)"
+          @deleteTodo="todos.splice(todos.indexOf(todo), 1)"
         />
-      </section>
+      </TransitionGroup>
 
       <footer class="todoapp__footer">
         <span class="todo-count"> {{ activeTodos.length }} items left </span>
@@ -103,3 +115,17 @@ export default {
     </article>
   </div>
 </template>
+
+<style>
+.list-enter-active,
+.list-leave-active {
+  max-height: 60px;
+  transition: all 0.5s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  max-height: 0;
+  transform: scaleY(0);
+}
+</style>
